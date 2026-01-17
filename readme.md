@@ -5,6 +5,8 @@ Die Bonner Großglockner-Route ist eine Fahrradroute der xxx steilsten, linksrhe
 **Challenge:** Absolviere alle Anstiege der Bonner Großglockner-Route am Stück –
 nur Du, Dein Rad und die Berge. Voraussetzung: ein halbwegs geländetaugliches Fahrrad mit Gangschaltung, ohne Motorisierung.
 
+See web page: https://nise.github.io/bonner-grossglockner-rad-route/
+
 **Roadmap for the web page**
 
 - [ ] Fotos der Auffahrten
