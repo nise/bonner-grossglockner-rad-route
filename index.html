@@ -18,7 +18,7 @@
 
         body {
             font-family: Arial, sans-serif;
-            padding: 20px;
+            padding: 0px;
             background-color: #f5f5f5;
         }
 
@@ -132,41 +132,6 @@
 
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-
-        th,
-        td {
-            padding: 5px;
-            text-align: right;
-            border-bottom: 1px solid #ddd;
-            text-align: right;
-        }
-
-        th:first-child,
-        td:first-child {
-            text-align: left;
-        }
-
-        th {
-            border-top: solid 1px #555;
-            border-bottom: solid 1px #555;
-            color: #555;
-            font-weight: bold;
-        }
-
-        tr:hover {
-            background-color: #f5f5f5;
-        }
-
-        tr.total-row {
-            font-weight: bold;
-            border-top: solid 1px #555;
-            border-bottom: solid 1px #555;
-        }
 
         .clickable-row {
             cursor: pointer;
@@ -188,7 +153,172 @@
 
         .info-panel {
             max-width: 800px;
-            width: 80%;
+            width: 100%;
+        }
+
+
+        /* Desktop: Keep original table layout */
+        @media screen and (min-width: 769px) {
+            .file-selector {
+                display: none;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+            }
+
+            th,
+            td {
+                padding: 5px;
+                text-align: right;
+                border-bottom: 1px solid #ddd;
+                text-align: right;
+            }
+
+            th:first-child,
+            td:first-child {
+                text-align: left;
+            }
+
+            th {
+                border-top: solid 1px #555;
+                border-bottom: solid 1px #555;
+                color: #555;
+                font-weight: bold;
+            }
+
+            tr:hover {
+                background-color: #f5f5f5;
+            }
+
+            tr.total-row {
+                font-weight: bold;
+                border-top: solid 1px #555;
+                border-bottom: solid 1px #555;
+            }
+
+        }
+
+
+
+        /* Mobile: Stack table cells */
+        @media screen and (max-width: 768px) {
+            .file-selector {
+                margin-bottom: 20px;
+            }
+
+            .file-selector label {
+                display: block;
+                margin-bottom: 5px;
+            }
+
+            .file-selector select {
+                width: 100%;
+                max-width: 100%;
+                padding: 10px;
+                font-size: 16px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                box-sizing: border-box;
+            }
+
+            /* Remove the standalone select rule and merge it here */
+            select {
+                padding: 10px;
+                font-size: 16px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                width: 100%;
+                max-width: 500px;
+                box-sizing: border-box;
+            }
+
+            select {
+                font-size: 14px;
+                padding: 8px;
+                max-width: 100%;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            thead {
+                display: none;
+                /* Hide header on mobile */
+            }
+
+            tbody tr {
+                display: block;
+                margin-bottom: 15px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 10px;
+            }
+
+            tbody td {
+                display: block;
+                text-align: right;
+                padding: 8px 0;
+                border-bottom: 1px solid #eee;
+                position: relative;
+                padding-left: 50%;
+            }
+
+            tbody td:last-child {
+                border-bottom: none;
+            }
+
+            /* Add labels before each cell */
+            tbody td:nth-child(1)::before {
+                content: "Auffahrt: ";
+            }
+
+            tbody td:nth-child(2)::before {
+                content: "Länge: ";
+            }
+
+            tbody td:nth-child(3)::before {
+                content: "Höhenmeter: ";
+            }
+
+            tbody td:nth-child(4)::before {
+                content: "Anstieg: ";
+            }
+
+            tbody td:nth-child(5)::before {
+                content: "Norm. Anstieg: ";
+            }
+
+            tbody td::before {
+                position: absolute;
+                left: 10px;
+                font-weight: bold;
+                text-align: left;
+            }
+
+            /* First column (route name) - full width */
+            tbody td:first-child {
+                font-weight: bold;
+                font-size: 16px;
+                text-align: left;
+                padding-left: 0;
+                border-bottom: 2px solid #007bff;
+                margin-bottom: 8px;
+            }
+
+            tbody td:first-child::before {
+                display: none;
+                /* Don't show "Auffahrt:" label */
+            }
+
+            /* Total row styling */
+            tbody tr.total-row {
+                background-color: #e9ecef;
+                font-weight: bold;
+            }
         }
     </style>
 </head>
@@ -268,9 +398,9 @@
                     </tbody>
                 </table>
             </div>
-            <h2> {{ routeConfig.find(r => r.file === selectedFile)?.displayName || '' }}</h2>
+            
 
-            <div hidden class="file-selector">
+            <div class="file-selector">
                 <label for="fileSelect">Wähle eine Auffahrt:</label>
                 <select id="fileSelect" v-model="selectedFile" @change="onFileChange">
                     <option value="">-- Wähle eine Route --</option>
@@ -279,6 +409,8 @@
                     </option>
                 </select>
             </div>
+
+            <h2> {{ routeConfig.find(r => r.file === selectedFile)?.displayName || '' }}</h2>
 
             <div v-if="loading" class="loading">Route wird geladen...</div>
             <div v-if="error" class="error">{{ error }}</div>
