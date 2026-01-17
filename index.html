@@ -629,8 +629,21 @@
                             color: '#ff0000',
                             weight: 4,
                             opacity: 0.7
+                        },
+                        pointToLayer: function (feature, latlng) {
+                            // Return null to prevent marker creation
+                            return null;
+                        },
+                        onEachFeature: function (feature, layer) {
+                            // You can add popups or other features here if needed
+                        },
+                        // Alternative: filter out point features completely
+                        filter: function (feature) {
+                            // Only show LineString and Polygon features, not Points
+                            return feature.geometry.type !== 'Point';
                         }
                     }).addTo(map);
+
 
                     map.fitBounds(currentLayer.getBounds());
 
