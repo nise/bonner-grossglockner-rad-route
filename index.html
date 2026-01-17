@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonner Großglockner-Route</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: darkblue;
+        }
+
+        h2 {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: darkblue;
+        }
+
+        .intro {
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .file-selector {
+            margin-bottom: 20px;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-width: 300px;
+        }
+
+        #map {
+            width: 100%;
+            height: 500px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid darkblue;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-unit {
+            font-size: 14px;
+            color: #666;
+            margin-left: 5px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        #elevationChart {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .error {
+            padding: 15px;
+            background: #f8d7da;
+            color: #721c24;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            padding: 15px;
+            background: #d1ecf1;
+            color: #0c5460;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        a {
+            color: darkblue;
+
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th,
+        td {
+            padding: 5px;
+            text-align: right;
+            border-bottom: 1px solid #ddd;
+            text-align: right;
+        }
+
+        th:first-child,
+        td:first-child {
+            text-align: left;
+        }
+
+        th {
+            border-top: solid 1px #555;
+            border-bottom: solid 1px #555;
+            color: #555;
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        tr.total-row {
+            font-weight: bold;
+            border-top: solid 1px #555;
+            border-bottom: solid 1px #555;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+        }
+
+        .clickable-row:hover {
+            background-color: #e3f2fd;
+        }
+
+        .reference-table {
+            margin-top: 30px;
+        }
+
+        .loading-table {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .info-panel {
+            max-width: 800px;
+            width: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="container info-panel">
+            <div class="">
+                <h1>Bonner Großglockner-Route</h1>
+
+                <div class="intro">
+                    <p>Die Bonner Großglockner-Route ist eine Fahrradroute der <strong>{{ routeConfig.length }}
+                            steilsten</strong>, linksrheinischen Auffahrten in Bonn. Mit einer Länge von <strong>{{
+                            totalStats.distance }} km</strong>, <strong>{{ totalStats.elevation }} Höhenmetern</strong>
+                        und
+                        einem normalisierten Anstieg von <strong>{{ totalStats.normalizedGrade }}%</strong> entspricht
+                        die
+                        Route in etwa der Großglockner Hochalpenstraße.</p>
+
+                    <p style="margin-top: 10px;"><strong>Challenge:</strong> Absolviere alle Anstiege der Bonner
+                        Großglockner-Route am Stück – nur Du, Dein Rad und die Berge. Voraussetzung: ein halbwegs
+                        geländetaugliches Fahrrad mit Gangschaltung, ohne Motorisierung.</p>
+                </div>
+
+                <h2>Streckenführung und Höhenprofil</h2>
+                <p style="line-height: 1.6;">Die Route ist als Rundweg konzipiert, bei dem die Teilstrecken im Wechsel
+                    auf
+                    und ab gefahren werden, sodass am Ende jeder Anstieg einmal hinauf und einmal hinab absolviert
+                    wurde. Die Streckenführung folgt breiten Wegen ohne Treppen und
+                    verläuft weitgehend abseits des Straßenverkehrs. Dabei wird stets Rücksicht auf Spaziergänger
+                    genommen.
+                </p>
+                <p style="margin: 20px 0; font-size: 14px; color: #666;">
+                    Die Längen und Höhenmeter wurden mit Hilfe von OpenStreetMap und <a
+                        href="https://brouter.de/brouter-web">BRouter</a> berechnet.
+                    Die Angaben betreffen nur die Auf- bzw. Abfahrten, nicht jedoch die Verbindungswege.
+                    Wenn man die Teilstrecken in der angegeben Reihenfolge im Wechsel auf und ab fährt, so
+                    dass alle Anfahrten einmal hinauf und einmal hinabgefahren wurden, ergibt sich eine Gesamtstrecke
+                    von
+                    <strong>{{ totalStats.totalDistance }} km</strong> und <strong>{{ totalStats.totalElevation }}
+                        Höhenmetern</strong>.
+                </p>
+
+
+
+
+                <div v-if="tableLoading" class="loading-table">
+                    Lade Routendaten...
+                </div>
+
+                <table v-else>
+                    <thead>
+                        <tr>
+                            <th>Auffahrt</th>
+                            <th>Länge</th>
+                            <th>Höhenmeter</th>
+                            <th>Anstieg</th>
+                            <th>Norm. Anstieg</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="route in routeConfig" :key="route.file" class="clickable-row"
+                            @click="selectRoute(route.file)">
+                            <td>{{ route.displayName }}</td>
+                            <td>{{ route.stats?.distance || '—' }}</td>
+                            <td>{{ route.stats?.elevation || '—' }}</td>
+                            <td>{{ route.stats?.grade || '—' }}</td>
+                            <td>{{ route.stats?.normalizedGrade || '—' }}</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Gesamt</strong></td>
+                            <td><strong>{{ totalStats.distance }} km</strong></td>
+                            <td><strong>{{ totalStats.elevation }} m</strong></td>
+                            <td><strong>{{ totalStats.avgGrade }}%</strong></td>
+                            <td><strong>{{ totalStats.normalizedGrade }}%</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h2> {{ routeConfig.find(r => r.file === selectedFile)?.displayName || '' }}</h2>
+
+            <div hidden class="file-selector">
+                <label for="fileSelect">Wähle eine Auffahrt:</label>
+                <select id="fileSelect" v-model="selectedFile" @change="onFileChange">
+                    <option value="">-- Wähle eine Route --</option>
+                    <option v-for="route in routeConfig" :key="route.file" :value="route.file">
+                        {{ route.displayName }}
+                    </option>
+                </select>
+            </div>
+
+            <div v-if="loading" class="loading">Route wird geladen...</div>
+            <div v-if="error" class="error">{{ error }}</div>
+
+            <div id="map"></div>
+
+            <div v-if="stats" class="stats">
+                <div class="stat-card">
+                    <div class="stat-label">Streckenlänge</div>
+                    <div class="stat-value">
+                        {{ stats.totalDistance }}<span class="stat-unit">km</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Gesamthöhenmeter</div>
+                    <div class="stat-value">
+                        {{ stats.totalAltitudeGain }}<span class="stat-unit">m</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Nur Anstiege</div>
+                    <div class="stat-value">
+                        {{ stats.effectiveAltitude }}<span class="stat-unit">m</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Höchster Punkt</div>
+                    <div class="stat-value">
+                        {{ stats.maxElevation }}<span class="stat-unit">m</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Tiefster Punkt</div>
+                    <div class="stat-value">
+                        {{ stats.minElevation }}<span class="stat-unit">m</span>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="stats" class="chart-container">
+                <canvas id="elevationChart"></canvas>
+            </div>
+
+            <h2>Referenzstrecke: Großglockner-Hochalpenstraße</h2>
+
+            <p style="margin-bottom: 20px;">Die Großglockner-Hochalpenstraße habe ich als Referenz gewählt, weil sie
+                bekannt ist und in Länge und Anstieg den Bonner Gegebenheiten in nichts nachsteht. Siehe <a
+                    href="https://www.quaeldich.de/paesse/grossglockner-hochalpenstrasse/#karte" target="_blank">Profil
+                    auf quaeldich.de</a></p>
+
+            <table class="reference-table">
+                <thead>
+                    <tr>
+                        <th>Auffahrt</th>
+                        <th>Länge</th>
+                        <th>Höhenmeter</th>
+                        <th>Anstieg</th>
+                        <th>Norm. Anstieg</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr hidden>
+                        <td>Nordrampe von Bruck</td>
+                        <td>32 km</td>
+                        <td>1900 m</td>
+                        <td>5,9 %</td>
+                        <td>~9,1 %</td>
+                    </tr>
+                    <tr>
+                        <td>Südrampe von Heiligenblut</td>
+                        <td>15 km</td>
+                        <td>1203 m</td>
+                        <td>8,0 %</td>
+                        <td>~10,9 %</td>
+                    </tr>
+                </tbody>
+            </table>
+            <footer style="
+    margin-top: 50px;
+    padding: 20px 0;
+    border-top: 2px solid #e9ecef;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+">
+                <p>
+                    2025
+                    <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer"
+                        style="color: #007bff; text-decoration: none;">
+                        Niels Seidel
+                    </a> Creative Commons CC-BY
+                </p>
+                <p style="margin-top: 10px;">
+                    <a href="https://github.com/nise/bonner-grossglockner-rad-route" target="_blank"
+                        rel="noopener noreferrer" style="color: #666; text-decoration: none;">
+                        <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;"
+                            fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                        </svg>
+                        View on GitHub
+                    </a>
+                </p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+    <script>
+        const { createApp, reactive, ref, onMounted, nextTick, computed } = Vue;
+
+        createApp({
+            setup() {
+                // Configuration: Route mapping with custom display names
+                const routeConfig = reactive([
+                    {
+                        file: 'routes/Kreuzberg.geojson',
+                        displayName: 'Kreuzbergkirche über Trierer Straße (BN-Poppelsdorf)',
+                        stats: null
+                    },
+                    {
+                        file: 'routes/Mordkapellenpfad.geojson',
+                        displayName: 'Kreuzbergkirche über Mordkapellenpfad (BN-Poppelsdorf)',
+                        stats: null
+                    },
+                    {
+                        file: 'routes/TriererstraßeIppendorf.geojson',
+                        displayName: 'Trierer Straße Ippendorf (BN-Poppelsdorf)',
+                        stats: null
+                    },
+                    {
+                        file: 'routes/RobertKochStraße.geojson',
+                        displayName: 'Venusberg ab Robert-Koch-Straße (BN-Poppelsdorf)',
+                        stats: null
+                    },
+                    {
+                        file: 'routes/Rosenburg1.geojson',
+                        displayName: 'Venusberg über Rosenburg, Westanfahrt (BN-Kessenich)',
+                        stats: null
+                    },
+                    {
+                        file: 'routes/Rosenburg2.geojson',
+                        displayName: 'Venusberg über Rosenburg, Ostanfahrt (BN-Kessenich)',
+                        stats: null
+                    },
+                    {
+                        file: 'routes/Bergstraße.geojson',
+                        displayName: 'Venusberg über Bergstraße (BN-Kessenich)',
+                        stats: null
+                    },
+                    {
+                        file: 'routes/Nachtigallenweg.geojson',
+                        displayName: 'Venusberg über Gut Melb und Nachtigallenweg (BN-Kessenich)',
+                        stats: null
+                    },
+                    {
+                        file: 'routes/AnnabergerStrasse.geojson',
+                        displayName: 'Annabergerstraße Richtung Annaberger Hof (BN-Friesdorf)',
+                        stats: null
+                    },
+                    {
+                        file: 'routes/AlterFahrweg.geojson',
+                        displayName: 'Venusberg über den Alten Fahrweg (BN-Poppelsdorf)',
+                        stats: null
+                    },
+                    {
+                        file: 'routes/Pionierweg.geojson',
+                        displayName: 'Venusberg über /Klufterbachtal und Pionierweg (BN-Friesdorf)',
+                        stats: null
+                    },
+                ]);
+
+                // State
+                const selectedFile = ref('');
+                const loading = ref(false);
+                const tableLoading = ref(true);
+                const error = ref('');
+                const stats = ref(null);
+
+                // Map and chart instances
+                let map = null;
+                let currentLayer = null;
+                let chart = null;
+
+                // Computed totals
+                const totalStats = computed(() => {
+                    const routes = routeConfig.filter(r => r.stats);
+
+                    if (routes.length === 0) {
+                        return {
+                            distance: '—',
+                            elevation: '—',
+                            avgGrade: '—',
+                            normalizedGrade: '—',
+                            totalDistance: '—',
+                            totalElevation: '—'
+                        };
+                    }
+
+                    const totalDist = routes.reduce((sum, r) => sum + parseFloat(r.stats.distanceValue), 0);
+                    const totalElev = routes.reduce((sum, r) => sum + parseInt(r.stats.elevationValue), 0);
+                    const avgGrade = routes.reduce((sum, r) => sum + parseFloat(r.stats.gradeValue), 0) / routes.length;
+                    const normalizedGrade = routes.reduce((sum, r) => sum + parseFloat(r.stats.normalizedGradeValue), 0) / routes.length;
+
+                    // Total distance assuming round trip (up and down each climb)
+                    const roundTripDist = totalDist * 2;
+                    const roundTripElev = totalElev * 2;
+
+                    return {
+                        distance: totalDist.toFixed(1),
+                        elevation: totalElev.toString(),
+                        avgGrade: avgGrade.toFixed(1),
+                        normalizedGrade: normalizedGrade.toFixed(1),
+                        totalDistance: roundTripDist.toFixed(1),
+                        totalElevation: roundTripElev.toString()
+                    };
+                });
+
+                // Initialize map
+                onMounted(async () => {
+                    map = L.map('map').setView([50.7374, 7.0982], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+
+                    // Load all routes to populate table
+                    await loadAllRouteStats();
+                });
+
+                // Load statistics for all routes
+                const loadAllRouteStats = async () => {
+                    tableLoading.value = true;
+
+                    for (let i = 0; i < routeConfig.length; i++) {
+                        const route = routeConfig[i];
+                        try {
+                            const response = await fetch(route.file);
+                            if (response.ok) {
+                                const geojson = await response.json();
+                                const coordinates = geojson.features[0].geometry.coordinates;
+                                const profile = calculateProfile(coordinates);
+                                const routeStats = calculateStats(profile);
+
+                                const distanceValue = parseFloat(routeStats.totalDistance);
+                                const elevationValue = routeStats.effectiveAltitude;
+                                const gradeValue = parseFloat(calculateGrade(distanceValue, elevationValue));
+                                const normalizedGradeValue = parseFloat(calculateNormalizedGrade(distanceValue, elevationValue));
+
+                                route.stats = {
+                                    distance: distanceValue.toFixed(1) + ' km',
+                                    elevation: elevationValue + ' m',
+                                    grade: gradeValue.toFixed(1) + '%',
+                                    normalizedGrade: '~' + normalizedGradeValue.toFixed(1) + '%',
+                                    distanceValue: distanceValue,
+                                    elevationValue: elevationValue,
+                                    gradeValue: gradeValue,
+                                    normalizedGradeValue: normalizedGradeValue
+                                };
+
+                                console.log(`Loaded: ${route.displayName}`, route.stats);
+                            }
+                        } catch (err) {
+                            console.error(`Failed to load ${route.file}:`, err);
+                        }
+                    }
+
+                    tableLoading.value = false;
+                };
+
+                // Calculate grade percentage
+                const calculateGrade = (distanceKm, elevationM) => {
+                    const distanceM = distanceKm * 1000;
+                    const grade = (elevationM / distanceM) * 100;
+                    return grade.toFixed(1);
+                };
+
+                // Calculate normalized grade
+                const calculateNormalizedGrade = (distanceKm, elevationM) => {
+                    const grade = parseFloat(calculateGrade(distanceKm, elevationM));
+                    const normalized = grade * 1.5;
+                    return normalized.toFixed(1);
+                };
+
+                // Select route from table
+                const selectRoute = (file) => {
+                    selectedFile.value = file;
+                    onFileChange();
+                };
+
+                // Clear map and reset state
+                const clearMap = () => {
+                    if (currentLayer) {
+                        map.removeLayer(currentLayer);
+                        currentLayer = null;
+                    }
+                    if (chart) {
+                        chart.destroy();
+                        chart = null;
+                    }
+                    stats.value = null;
+                    error.value = '';
+                };
+
+                // Handle file selection change
+                const onFileChange = async () => {
+                    if (!selectedFile.value) {
+                        clearMap();
+                        return;
+                    }
+
+                    await loadGeoJSON(selectedFile.value);
+                };
+
+                // Load GeoJSON file
+                const loadGeoJSON = async (filepath) => {
+                    clearMap();
+                    loading.value = true;
+
+                    try {
+                        const response = await fetch(filepath);
+                        if (!response.ok) {
+                            throw new Error(`Failed to load ${filepath}`);
+                        }
+
+                        const geojson = await response.json();
+                        await processGeoJSON(geojson);
+
+                    } catch (err) {
+                        error.value = `Error loading file: ${err.message}`;
+                        console.error(err);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                // Process GeoJSON data
+                const processGeoJSON = async (geojson) => {
+                    currentLayer = L.geoJSON(geojson, {
+                        style: {
+                            color: '#ff0000',
+                            weight: 4,
+                            opacity: 0.7
+                        }
+                    }).addTo(map);
+
+                    map.fitBounds(currentLayer.getBounds());
+
+                    const coordinates = geojson.features[0].geometry.coordinates;
+                    const profile = calculateProfile(coordinates);
+                    stats.value = calculateStats(profile);
+
+                    await nextTick();
+                    setTimeout(() => {
+                        drawElevationChart(profile);
+                    }, 100);
+                };
+
+                // Calculate elevation profile
+                const calculateProfile = (coordinates) => {
+                    let distance = 0;
+                    const profile = [];
+
+                    for (let i = 0; i < coordinates.length; i++) {
+                        const [lon, lat, ele] = coordinates[i];
+
+                        if (i > 0) {
+                            const [prevLon, prevLat] = coordinates[i - 1];
+                            const R = 6371000;
+                            const φ1 = prevLat * Math.PI / 180;
+                            const φ2 = lat * Math.PI / 180;
+                            const Δφ = (lat - prevLat) * Math.PI / 180;
+                            const Δλ = (lon - prevLon) * Math.PI / 180;
+
+                            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                                Math.cos(φ1) * Math.cos(φ2) *
+                                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+                            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+                            distance += R * c;
+                        }
+
+                        profile.push({
+                            distance: distance / 1000,
+                            elevation: ele || 0,
+                            lat: lat,
+                            lon: lon
+                        });
+                    }
+
+                    return profile;
+                };
+
+                // Calculate statistics
+                const calculateStats = (profile) => {
+                    const totalDistance = profile[profile.length - 1].distance;
+
+                    let totalAltitudeGain = 0;
+                    let effectiveAltitude = 0;
+                    let maxElevation = -Infinity;
+                    let minElevation = Infinity;
+
+                    for (let i = 1; i < profile.length; i++) {
+                        const elevDiff = profile[i].elevation - profile[i - 1].elevation;
+
+                        totalAltitudeGain += Math.abs(elevDiff);
+
+                        if (elevDiff > 0) {
+                            effectiveAltitude += elevDiff;
+                        }
+
+                        maxElevation = Math.max(maxElevation, profile[i].elevation);
+                        minElevation = Math.min(minElevation, profile[i].elevation);
+                    }
+
+                    return {
+                        totalDistance: totalDistance.toFixed(2),
+                        totalAltitudeGain: Math.round(totalAltitudeGain),
+                        effectiveAltitude: Math.round(effectiveAltitude),
+                        maxElevation: Math.round(maxElevation),
+                        minElevation: Math.round(minElevation)
+                    };
+                };
+
+                // Draw elevation chart
+                const drawElevationChart = (profile) => {
+                    const canvas = document.getElementById('elevationChart');
+
+                    if (!canvas) {
+                        console.error('Canvas element not found');
+                        return;
+                    }
+
+                    const container = canvas.parentElement;
+                    if (!container || container.offsetWidth === 0 || container.offsetHeight === 0) {
+                        console.error('Canvas container has invalid dimensions');
+                        return;
+                    }
+
+                    if (chart) {
+                        chart.destroy();
+                        chart = null;
+                    }
+
+                    const ctx = canvas.getContext('2d');
+
+                    chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: profile.map(p => p.distance.toFixed(2)),
+                            datasets: [{
+                                label: 'Höhe (m)',
+                                data: profile.map(p => p.elevation),
+                                borderColor: 'rgb(255, 99, 132)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                                fill: true,
+                                tension: 0.1,
+                                pointRadius: 0,
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Höhenprofil'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            return `Höhe: ${context.parsed.y.toFixed(0)} m`;
+                                        },
+                                        title: function (context) {
+                                            return `Distanz: ${context[0].label} km`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Höhe (m)'
+                                    },
+                                    beginAtZero: false
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Distanz (km)'
+                                    },
+                                    ticks: {
+                                        maxTicksLimit: 10
+                                    }
+                                }
+                            }
+                        }
+                    });
+                };
+
+                return {
+                    routeConfig,
+                    selectedFile,
+                    loading,
+                    tableLoading,
+                    error,
+                    stats,
+                    totalStats,
+                    selectRoute,
+                    onFileChange
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>
