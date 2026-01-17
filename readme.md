@@ -7,11 +7,19 @@ nur Du, Dein Rad und die Berge. Voraussetzung: ein halbwegs geländetaugliches F
 
 See web page: https://nise.github.io/bonner-grossglockner-rad-route/
 
+## Development
+
+Run static web page locally: `python -m http.server 1234` and then open http://localhost:1234/ in the browser
+
 **Roadmap for the web page**
 
 - [ ] Fotos der Auffahrten
 - [ ] Daten als Download
 - [ ] Übertragung nach Komout
+
+**License**
+
+MIT
 
 **Contributor**
 
