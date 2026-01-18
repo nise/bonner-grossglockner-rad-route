@@ -319,6 +319,38 @@
                 background-color: #e9ecef;
                 font-weight: bold;
             }
+
+            .stats {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+                gap: 5px;
+                margin-bottom: 20px;
+            }
+
+            .stat-card {
+                background: #f8f9fa;
+                padding: 5px;
+                border-radius: 4px;
+                border-left: 4px solid darkblue;
+            }
+
+            .stat-label {
+                font-size: 10px;
+                color: #666;
+                margin-bottom: 5px;
+            }
+
+            .stat-value {
+                font-size: 14px;
+                font-weight: bold;
+                color: #333;
+            }
+
+            .stat-unit {
+                font-size: 10px;
+                color: #666;
+                margin-left: 2px;
+            }
         }
     </style>
 </head>
@@ -377,6 +409,7 @@
                             <th>Höhenmeter</th>
                             <th>Anstieg</th>
                             <th>Norm. Anstieg</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -387,6 +420,15 @@
                             <td>{{ route.stats?.elevation || '—' }}</td>
                             <td>{{ route.stats?.grade || '—' }}</td>
                             <td>{{ route.stats?.normalizedGrade || '—' }}</td>
+                            <td>
+                                <a :href="route.file" download
+                                    style="display: inline-flex; align-items: center; gap: 5px; text-decoration: none;">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                        <path d="M8 12L3 7h3V0h4v7h3L8 12z" />
+                                        <path d="M0 14h16v2H0z" />
+                                    </svg>
+                                </a>
+                            </td>
                         </tr>
                         <tr class="total-row">
                             <td><strong>Gesamt</strong></td>
@@ -394,11 +436,12 @@
                             <td><strong>{{ totalStats.elevation }} m</strong></td>
                             <td><strong>{{ totalStats.avgGrade }}%</strong></td>
                             <td><strong>{{ totalStats.normalizedGrade }}%</strong></td>
+                            <td></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            
+
 
             <div class="file-selector">
                 <label for="fileSelect">Wähle eine Auffahrt:</label>
@@ -419,19 +462,19 @@
 
             <div v-if="stats" class="stats">
                 <div class="stat-card">
-                    <div class="stat-label">Streckenlänge</div>
+                    <div class="stat-label">Distanz</div>
                     <div class="stat-value">
                         {{ stats.totalDistance }}<span class="stat-unit">km</span>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Gesamthöhenmeter</div>
+                    <div class="stat-label">Höhenmeter</div>
                     <div class="stat-value">
                         {{ stats.totalAltitudeGain }}<span class="stat-unit">m</span>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Nur Anstiege</div>
+                    <div class="stat-label">Anstiege</div>
                     <div class="stat-value">
                         {{ stats.effectiveAltitude }}<span class="stat-unit">m</span>
                     </div>
@@ -586,7 +629,7 @@
                     },
                     {
                         file: 'routes/Pionierweg.geojson',
-                        displayName: 'Venusberg über /Klufterbachtal und Pionierweg (BN-Friesdorf)',
+                        displayName: 'Venusberg über Klufterbachtal und Pionierweg (BN-Friesdorf)',
                         stats: null
                     },
                 ]);

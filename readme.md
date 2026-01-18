@@ -13,9 +13,9 @@ Run static web page locally: `python -m http.server 1234` and then open http://l
 
 **Roadmap for the web page**
 
-- [ ] Fotos der Auffahrten
-- [ ] Daten als Download
-- [ ] Übertragung nach Komout
+- [ ] Fotos der Auffahrten ergänzen
+- [ ] Vorschlag für Gesamtroute/Challenge
+- [ ] Kommentarfunktion
 
 **License**
 
